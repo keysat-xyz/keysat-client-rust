@@ -1,11 +1,11 @@
 [package]
-name = "licensing-client"
+name = "keysat-licensing-client"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.75"
 description = "Client library for Keysat. Verifies signed license keys offline and wraps the HTTP API for purchase and revocation checks."
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/keysat-xyz/keysat"
+repository = "https://github.com/keysat-xyz/keysat-client-rust"
 keywords = ["bitcoin", "licensing", "btcpay", "start9"]
 categories = ["authentication", "cryptography"]
 
