@@ -1,0 +1,15 @@
+# Cargo build artifacts
+target/
+Cargo.lock.bak
+
+# Editor / OS cruft
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.bak
+*.tmp
+
+# Env / secrets
+.env
+.env.local
