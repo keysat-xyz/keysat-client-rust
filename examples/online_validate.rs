@@ -19,7 +19,7 @@ async fn main() -> anyhow::Result<()> {
     let client = Client::new(&base_url)?;
 
     let session = client
-        .start_purchase(&product_slug, None, None)
+        .start_purchase(&product_slug, &Default::default())
         .await?;
     println!("open the checkout in your browser:");
     println!("  {}", session.checkout_url);

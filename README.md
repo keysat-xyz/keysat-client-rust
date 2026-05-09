@@ -51,7 +51,18 @@ The server enforces revocation live and does trust-on-first-use fingerprint bind
 ## Purchase flow
 
 ```rust
-let session = client.start_purchase("my-product", None, None).await?;
+use licensing_client::StartPurchaseOptions;
+
+// Default tier:
+let session = client.start_purchase("my-product", &Default::default()).await?;
+
+// Specific tier (e.g. Pro):
+let session = client.start_purchase("my-product", &StartPurchaseOptions {
+    policy_slug: Some("pro"),
+    buyer_email: Some("buyer@example.com"),
+    ..Default::default()
+}).await?;
+
 // open session.checkout_url in the user's browser
 loop {
     let poll = client.poll_purchase(&session.invoice_id).await?;

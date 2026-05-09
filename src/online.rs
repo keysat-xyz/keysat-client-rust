@@ -162,11 +162,14 @@ impl Client {
 
     /// Start a purchase for `product_slug`. Returns the BTCPay checkout URL
     /// to open in the buyer's browser and the invoice id to poll.
+    ///
+    /// Use [`StartPurchaseOptions`] to pass tier (`policy_slug`), buyer
+    /// email, redirect URL, discount code, and buyer note. For the simple
+    /// "default tier, no extras" case, pass `&Default::default()`.
     pub async fn start_purchase(
         &self,
         product_slug: &str,
-        buyer_email: Option<&str>,
-        redirect_url: Option<&str>,
+        options: &StartPurchaseOptions<'_>,
     ) -> Result<PurchaseSession> {
         let url = self
             .base
@@ -179,14 +182,50 @@ impl Client {
             #[serde(skip_serializing_if = "Option::is_none")]
             buyer_email: Option<&'a str>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            buyer_note: Option<&'a str>,
+            #[serde(skip_serializing_if = "Option::is_none")]
             redirect_url: Option<&'a str>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            code: Option<&'a str>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            policy_slug: Option<&'a str>,
         }
         let body = Req {
             product: product_slug,
-            buyer_email,
-            redirect_url,
+            buyer_email: options.buyer_email,
+            buyer_note: options.buyer_note,
+            redirect_url: options.redirect_url,
+            code: options.code,
+            policy_slug: options.policy_slug,
         };
         let resp = self.http.post(url).json(&body).send().await?;
+        let status = resp.status();
+        let text = resp.text().await?;
+        if !status.is_success() {
+            return Err(Error::Server {
+                status: status.as_u16(),
+                body: text,
+            });
+        }
+        serde_json::from_str(&text).map_err(|e| Error::Other(e.to_string()))
+    }
+
+    /// List public, buyer-visible policies (tiers) for a product. No
+    /// auth required — same data the licensing service's `/buy/<slug>`
+    /// page uses server-side. Use this to render an in-app tier picker
+    /// that stays in sync with the operator's admin-side tier setup.
+    ///
+    /// Internal fields (id, tip recipients, raw metadata) are
+    /// deliberately omitted by the server.
+    pub async fn list_public_policies(
+        &self,
+        product_slug: &str,
+    ) -> Result<PublicPoliciesResponse> {
+        let url = self
+            .base
+            .join(&format!("/v1/products/{product_slug}/policies"))
+            .map_err(|e| Error::BadUrl(e.to_string()))?;
+        let resp = self.http.get(url).send().await?;
         let status = resp.status();
         let text = resp.text().await?;
         if !status.is_success() {
@@ -318,6 +357,98 @@ pub struct MachineResponse {
     /// Seat cap for this license (echo of `max_machines`).
     #[serde(default)]
     pub max_machines: Option<i64>,
+}
+
+/// Optional extras for [`Client::start_purchase`]. All fields are
+/// optional; pass `&Default::default()` for the simple "default
+/// tier, no extras" case. To buy a specific tier, set
+/// `policy_slug = Some("...")`. To list available tiers without
+/// auth, use [`Client::list_public_policies`].
+#[derive(Debug, Clone, Default)]
+pub struct StartPurchaseOptions<'a> {
+    /// Email for the receipt.
+    pub buyer_email: Option<&'a str>,
+    /// Free-form note recorded on the invoice (admin-visible).
+    pub buyer_note: Option<&'a str>,
+    /// URL the buyer should be returned to after payment.
+    pub redirect_url: Option<&'a str>,
+    /// Discount / referral code.
+    pub code: Option<&'a str>,
+    /// Tier slug. When set, the policy's `price_sats_override`
+    /// becomes the base price and the issued license carries the
+    /// policy's entitlements / duration / max_machines / trial flag.
+    pub policy_slug: Option<&'a str>,
+}
+
+/// One tier on the buyer-facing tier picker. Returned by
+/// [`Client::list_public_policies`]. Mirrors what `/buy/<slug>`
+/// renders server-side, so an in-app tier picker can show
+/// identical text and pricing.
+#[derive(Debug, Clone, Deserialize)]
+pub struct PublicPolicy {
+    /// Stable identifier for the tier (e.g. `"core"`, `"pro"`).
+    /// Pass to [`StartPurchaseOptions::policy_slug`] to buy this tier.
+    pub slug: String,
+    /// Operator-set display name (e.g. `"Pro"`).
+    pub name: String,
+    /// Free-form per-tier blurb. Empty when not set.
+    #[serde(default)]
+    pub description: String,
+    /// Effective price in the smallest unit of the product's listed
+    /// currency: sats for SAT-priced products, cents for USD/EUR.
+    pub price_sats: i64,
+    /// 0 = perpetual; otherwise license lifetime in seconds.
+    #[serde(default)]
+    pub duration_seconds: i64,
+    /// Seat cap. 0 = unlimited, 1 = single-seat, n = n-seat.
+    #[serde(default = "default_one")]
+    pub max_machines: i64,
+    /// True if this tier is flagged as a trial.
+    #[serde(default)]
+    pub is_trial: bool,
+    /// Entitlement slugs the issued license will carry.
+    #[serde(default)]
+    pub entitlements: Vec<String>,
+    /// True if the operator marked this tier "Most popular".
+    #[serde(default)]
+    pub highlighted: bool,
+    /// True if the policy is a recurring subscription.
+    #[serde(default)]
+    pub is_recurring: bool,
+    /// Renewal cadence in days (0 for non-recurring).
+    #[serde(default)]
+    pub renewal_period_days: i64,
+    /// First-cycle free-trial length (0 for none).
+    #[serde(default)]
+    pub trial_days: i64,
+}
+
+fn default_one() -> i64 {
+    1
+}
+
+/// Product-level fields included in the public-policies response.
+#[derive(Debug, Clone, Deserialize)]
+pub struct PublicPoliciesProduct {
+    /// Product slug.
+    pub slug: String,
+    /// Operator-set product display name.
+    pub name: String,
+    /// Operator-set product description (free-form). Empty when unset.
+    #[serde(default)]
+    pub description: String,
+    /// Product's base price in sats. Tiers may override via
+    /// [`PublicPolicy::price_sats`].
+    pub base_price_sats: i64,
+}
+
+/// Response from `/v1/products/<slug>/policies`.
+#[derive(Debug, Clone, Deserialize)]
+pub struct PublicPoliciesResponse {
+    /// Product the tiers belong to.
+    pub product: PublicPoliciesProduct,
+    /// Active, public tiers — sorted by ascending effective price.
+    pub policies: Vec<PublicPolicy>,
 }
 
 /// Response from `/v1/purchase` when starting a purchase.
