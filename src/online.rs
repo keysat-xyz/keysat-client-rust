@@ -427,6 +427,24 @@ fn default_one() -> i64 {
     1
 }
 
+/// One entry in a product's entitlements catalog. Operator declares
+/// the closed list once per product; policies pick from this list.
+/// Use [`EntitlementDef::name`] as the human-readable label when
+/// rendering an in-app tier picker (e.g. "AI summaries" instead of
+/// the raw `ai_summaries` slug).
+#[derive(Debug, Clone, Deserialize)]
+pub struct EntitlementDef {
+    /// Stable identifier — what the SDK's `has_entitlement(slug)`
+    /// checks against and what gets baked into the signed payload.
+    pub slug: String,
+    /// Operator-set display label. Falls back to slug if empty.
+    #[serde(default)]
+    pub name: String,
+    /// Optional one-sentence tooltip. Empty when unset.
+    #[serde(default)]
+    pub description: String,
+}
+
 /// Product-level fields included in the public-policies response.
 #[derive(Debug, Clone, Deserialize)]
 pub struct PublicPoliciesProduct {
@@ -440,6 +458,12 @@ pub struct PublicPoliciesProduct {
     /// Product's base price in sats. Tiers may override via
     /// [`PublicPolicy::price_sats`].
     pub base_price_sats: i64,
+    /// Closed list of entitlements this product offers, with display
+    /// names + descriptions for buyer-facing rendering. Empty vec
+    /// when the operator hasn't defined a catalog (legacy "free-text"
+    /// mode).
+    #[serde(default)]
+    pub entitlements_catalog: Vec<EntitlementDef>,
 }
 
 /// Response from `/v1/products/<slug>/policies`.

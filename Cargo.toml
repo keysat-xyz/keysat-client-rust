@@ -1,6 +1,6 @@
 [package]
 name = "keysat-licensing-client"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 rust-version = "1.75"
 description = "Client library for Keysat. Verifies signed license keys offline and wraps the HTTP API for purchase and revocation checks."

@@ -47,6 +47,7 @@ pub use verify::{Verifier, VerifyOk};
 
 #[cfg(feature = "online")]
 pub use online::{
-    Client, MachineResponse, PollResponse, PublicPoliciesProduct, PublicPoliciesResponse,
-    PublicPolicy, PurchaseSession, StartPurchaseOptions, ValidateRequest, ValidateResponse,
+    Client, EntitlementDef, MachineResponse, PollResponse, PublicPoliciesProduct,
+    PublicPoliciesResponse, PublicPolicy, PurchaseSession, StartPurchaseOptions,
+    ValidateRequest, ValidateResponse,
 };
