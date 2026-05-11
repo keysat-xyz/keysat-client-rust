@@ -1,6 +1,6 @@
 # licensing-client
 
-Rust client for [`Keysat`](https://github.com/keysat-xyz/keysat) — a self-hosted Bitcoin-paid software licensing server that runs on Start9.
+Rust client for [`Keysat`](https://github.com/keysat-xyz/keysat) — a Bitcoin-native self-hosted software licensing service that runs on Start9.
 
 ## What you get
 

@@ -1,7 +1,7 @@
 //! # licensing-client
 //!
-//! Client library for the **licensing-service** — an open-source Bitcoin-paid
-//! software licensing server for Start9 boxes.
+//! Client library for the **licensing-service** — an open-source,
+//! Bitcoin-native self-hosted software licensing service for Start9 boxes.
 //!
 //! This crate gives your app everything it needs to check license keys
 //! issued by a `licensing-service` instance:
