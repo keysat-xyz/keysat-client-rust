@@ -12,11 +12,13 @@ Rust client for [`Keysat`](https://github.com/keysat-xyz/keysat) — a Bitcoin-n
 
 ```toml
 [dependencies]
-licensing-client = "0.1"
+keysat-licensing-client = "0.3"
 
 # Or, with the online features:
-licensing-client = { version = "0.1", features = ["online"] }
+keysat-licensing-client = { version = "0.3", features = ["online"] }
 ```
+
+Requires Rust 1.75+.
 
 ## 5-line offline check
 
@@ -38,7 +40,7 @@ use licensing_client::online::Client;
 
 let client = Client::new("https://license.example.com")?;
 let result = client
-    .validate(&key_from_user, Some("my-product"), Some(&machine_fingerprint))
+    .validate(&key_from_user, Some("my-product"), Some(machine_fingerprint.as_str()))
     .await?;
 if !result.ok {
     eprintln!("rejected: {:?}", result.reason);
