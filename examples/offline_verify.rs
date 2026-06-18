@@ -7,7 +7,7 @@
 //! In real life you'd embed the public key with `include_str!` — here we
 //! read it from an env var so the example has zero build-time coupling.
 
-use licensing_client::{PublicKeyPem, Verifier};
+use keysat_licensing_client::{PublicKeyPem, Verifier};
 use std::env;
 
 fn main() {

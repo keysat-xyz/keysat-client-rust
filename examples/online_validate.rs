@@ -6,12 +6,12 @@
 //! The example will start a purchase, print the BTCPay checkout URL for
 //! you to pay, then poll until a license key is issued and validate it.
 
-use licensing_client::online::Client;
+use keysat_licensing_client::online::Client;
 use std::time::Duration;
 use tokio::time::sleep;
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
     let base_url = args.next().expect("pass base URL, e.g. https://license.example.com");
     let product_slug = args.next().expect("pass product slug");
@@ -33,7 +33,7 @@ async fn main() -> anyhow::Result<()> {
         }
         println!("  status: {}", p.status);
         if p.status == "expired" || p.status == "invalid" {
-            anyhow::bail!("invoice ended in status {}", p.status);
+            return Err(format!("invoice ended in status {}", p.status).into());
         }
     };
 

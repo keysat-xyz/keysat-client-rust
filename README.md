@@ -23,7 +23,7 @@ Requires Rust 1.75+.
 ## 5-line offline check
 
 ```rust
-use licensing_client::{Verifier, PublicKeyPem};
+use keysat_licensing_client::{Verifier, PublicKeyPem};
 
 let pubkey = PublicKeyPem::from_str(include_str!("issuer.pub"))?;
 let verifier = Verifier::new(pubkey);
@@ -36,7 +36,7 @@ That's the whole integration. `include_str!("issuer.pub")` embeds your public ke
 ## 10-line online check (with revocation + fingerprint)
 
 ```rust
-use licensing_client::online::Client;
+use keysat_licensing_client::online::Client;
 
 let client = Client::new("https://license.example.com")?;
 let result = client
@@ -53,7 +53,7 @@ The server enforces revocation live and does trust-on-first-use fingerprint bind
 ## Purchase flow
 
 ```rust
-use licensing_client::StartPurchaseOptions;
+use keysat_licensing_client::StartPurchaseOptions;
 
 // Default tier:
 let session = client.start_purchase("my-product", &Default::default()).await?;

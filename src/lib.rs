@@ -17,9 +17,11 @@
 //! ## 5-line integration example
 //!
 //! ```no_run
-//! use licensing_client::{Verifier, PublicKeyPem};
+//! use keysat_licensing_client::{Verifier, PublicKeyPem};
 //!
-//! let pubkey = PublicKeyPem::from_str(include_str!("../my_issuer.pub")).unwrap();
+//! // In real use, embed your issuer's key at build time:
+//! //   PublicKeyPem::from_str(include_str!("../my_issuer.pub"))
+//! let pubkey = PublicKeyPem::from_str("-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----").unwrap();
 //! let verifier = Verifier::new(pubkey);
 //! let result = verifier.verify("LIC1-...").expect("valid license");
 //! println!("license ok for product {}", result.product_id);
